@@ -1,0 +1,124 @@
+﻿@using Microsoft.AspNet.Identity
+
+
+@model IEnumerable<BlueRibbonsReview.ViewModels.AnalyticsViewModel>
+
+@{
+    var user = (System.Security.Claims.ClaimsIdentity)User.Identity;
+    ViewBag.Title = user.FindFirstValue("CustomName") + "'s Campaigns";
+}
+<h2> @ViewBag.Title</h2>
+
+<p>
+    <a href="@Url.Action("Create", "Campaigns")"><i class="fas fa-pencil-alt"></i> Create New</a>
+</p>
+@foreach (var item in Model)
+{
+
+    @*Helper method to control pluralization used on line 20 for number of campaign reviews.*@
+    @helper pluralize(int amount, string singular, string plural)
+    {
+        @(amount == 1 ? singular : plural)
+    }
+    //Removes the statements of average rating and review count if there are none.
+    if (item.Campaign.Reviews.Count == 0)
+    {
+        <p style="display: inline;" class="itemData">
+            <img class="imgThumb itemData" src="@item.Campaign.ImageUrL" alt="@item.Campaign.Name" /> | @Html.DisplayFor(modelItem => item.Campaign.Name)  |  @{var reviewsCount = item.Campaign.Reviews.Count; @pluralize(reviewsCount, +reviewsCount + " review", +reviewsCount + " reviews") } |
+        </p>
+    }
+    else
+    {
+        <p style="display: inline;" class="itemData">
+            <img class="imgThumb itemData" src="@item.Campaign.ImageUrL" alt="@item.Campaign.Name" /> | @Html.DisplayFor(modelItem => item.Campaign.Name) | @Html.DisplayNameFor(model => model.ReviewAverage): @Html.DisplayFor(modelItem => item.ReviewAverage) |  @{var reviewsCount = item.Campaign.Reviews.Count; @pluralize(reviewsCount, +reviewsCount + " review", +reviewsCount + " reviews")
+            } |
+        </p>
+    }
+
+
+
+
+    <div class="accordion" style="display:inline;">
+        <h5 class="text-primary SellerIndexDetails">See More Details</h5>
+        <div>
+            <div>
+                <strong>@Html.DisplayNameFor(model => model.Campaign.StartDate):</strong> @Html.DisplayFor(modelItem => item.Campaign.StartDate)
+                <strong>@Html.DisplayNameFor(model => model.Campaign.CloseDate):</strong> @Html.DisplayFor(modelItem => item.Campaign.CloseDate)
+                <strong>@Html.DisplayNameFor(model => model.Campaign.ExpireDate):</strong> @Html.DisplayFor(modelItem => item.Campaign.ExpireDate)
+            </div>
+            <h5>
+                @* Edit link disabled until a seller-specific Edit View is added *@
+                @Html.ActionLink(" ", "Edit", new { id = item.Campaign.CampaignID }, new { @class = " fa fa-pencil-square-o fa-lg " }) |
+                @Html.ActionLink(" ", "Details", new { id = item.Campaign.CampaignID }, new { @class = " fa fa-lg fa-info pointer icon " }) |
+                @Html.ActionLink(" ", "Delete", new { id = item.Campaign.CampaignID }, new { @class = " fa fa-trash-alt fa-lg " })
+            </h5>
+            <!--Remove Promotions from Seller Index page-->
+            <!--
+                <div>
+                <strong>@Html.LabelFor(modelItem => item.Campaign.Promotions): </strong>
+            </div>
+            <p>
+                <ul style="list-style-type:none">
+                    @foreach (var promotion in item.Campaign.Promotions)
+                    {
+                        <li>
+                            @Html.DisplayFor(p => promotion.PromotionId): @Html.DisplayFor(p => promotion.ItemCount) items
+                        </li>
+                    }
+                </ul>
+            </p>
+            //-->
+            @if (!(Double.IsNaN(item.ReviewAverage))) //Checks for an undefined review average and omits the reviews summary if there are none.
+            {
+                <h5>
+                    <strong>Item Rating:</strong>
+                    <div class="stars">
+                        <i class="star-1">1</i>
+                        <i class="star-2">2</i>
+                        <i class="star-3">3</i>
+                        <i class="star-4">4</i>
+                        <i class="star-5">5</i>
+                        <span style="width: @(item.ReviewAverage*20)%"></span>
+                    </div>
+                </h5>
+                <p>
+
+
+                    @foreach (var review in item.Campaign.Reviews)
+                    {
+                        <div> See what  @review.ApplicationUser.FirstName has to say: </div>
+                        <ul style="list-style-type:none">
+                            <li>
+                                <strong>@Html.LabelFor(r => review.ProductRating): </strong>@Html.DisplayFor(r => review.ProductRating)
+                            </li>
+                            <li>
+                                <strong>@Html.LabelFor(r => review.ReviewDetails): </strong> @*@Html.DisplayFor(r => review.ReviewDetails)*@
+                                @{
+                                    var campaignReview = review.ReviewDetails;
+                                    var reviewDetailsLength = review.ReviewDetails.Length;
+
+                                    if (reviewDetailsLength > 40)
+                                    {
+                                        campaignReview = review.ReviewDetails.Substring(0, 40);
+                                        <span class="MessagePopover" data-placement="bottom" data-content="@review.ReviewDetails" data-trigger="hover">@campaignReview...</span>
+                                    }
+                                    else
+                                    {
+                                        @Html.DisplayFor(r => review.ReviewDetails)
+                                    }
+                                }
+                            </li>
+                            <li>
+                                <strong>@Html.LabelFor(r => review.ReviewDate): </strong>@Html.DisplayFor(r => review.ReviewDate)
+                            </li>
+                        </ul>
+                    }
+                </p>
+            }
+        </div>
+    </div>
+    <br />
+    <br />
+}
+
+
